@@ -176,7 +176,7 @@ module.exports = {
 
 ## Notes & next steps
 
-- I replaced all mentions of `Samir Œ`, `samirxpikachu`, and similar author mentions with `frnwot`.
+- I replaced all mentions of `frnwot`, `frnwot`, and similar author mentions with `yourname`.
 - I removed the original `.git` folder to make the project ready for you to initialize and push to your GitHub account.
 - If you want, I can also create a GitHub repo and prepare a deployment script — but you'll need to provide access or do the final `git push` yourself.
 
