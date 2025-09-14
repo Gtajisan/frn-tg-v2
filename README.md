@@ -1,4 +1,4 @@
-# frn-tg-v2
+# frn-tg-v2 open source bot
 
 **Author:** frnwot  
 **GitHub:** [frnwot](https://github.com/frnwot)  
@@ -40,7 +40,7 @@ Depending on the bot implementation detected in the project, install the followi
 
 ### 2. Unzip & open project
 ```bash
-git clone url 
+git https://github.com/frnwot/frn-tg-v2.git
 cd frn-tg-v2
 ```
 
@@ -60,7 +60,7 @@ npm start
 node index.js
 ```
 
-### 3b. If Python project
+### 3b. If you make these Python project 
 ```bash
 python3 -m venv venv
 source venv/bin/activate
@@ -81,7 +81,7 @@ git add .
 git commit -m "Initial commit - frn-tg-v2"
 git branch -M main
 # create a repo on GitHub named frn-tg-v2, then:
-git remote add origin git@github.com:frnwot/frn-tg-v2.git
+git remote add origin git@github.com: yourname/frn-tg-v2.git
 git push -u origin main
 ```
 
