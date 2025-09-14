@@ -50,10 +50,9 @@ cd frn-tg-v2
 npm install
 
 # configure env variables
-# copy .env.example to .env and edit
-cp .env.example .env
-# edit .env, set your bot token, API keys, database URLs, etc.
-
+# copy copy your token for bot_father and past config.json and edit
+location 'config.json`
+like = "token": "your_token",
 # run the bot
 npm start
 # or
