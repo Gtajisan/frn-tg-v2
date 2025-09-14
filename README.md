@@ -46,18 +46,19 @@ cd frn-tg-v2
 
 ### 3a. If Node.js project
 ```bash
-# install dependencies
 npm install
 
-# configure env variables
-# copy copy your token for bot_father and past config.json and edit
-location 'config.json`
-like = "token": "your_token",
-# run the bot
+# Configure environment variables
+# Copy your bot token from @BotFather and paste it into config.json
+# Example:
+# {
+#   "token": "your_token"
+# }
+```
+# Run the bot
 npm start
 # or
 node index.js
-```
 
 ### 3b. If you make these Python project 
 ```bash
