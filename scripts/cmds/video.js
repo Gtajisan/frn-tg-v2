@@ -1,67 +1,110 @@
 const axios = require("axios");
 const fs = require("fs-extra");
-const ytdl = require("ytdl-core");
-const yts = require("yt-search");
 const path = require("path");
-const ID3Writer = require('node-id3');
+
+const baseApiUrl = async () => {
+  const base = await axios.get(
+    `https://raw.githubusercontent.com/Mostakim0978/D1PT0/refs/heads/main/baseApiUrl.json`
+  );
+  return base.data.api;
+};
 
 module.exports = {
   config: {
-    name: "video",
-    author: "frnwot",
-    description: "Search and download video from YouTube",
-    category: "video",
-    usage: "video [title]",
-    usePrefix: true
+    name: "alldl",
+    version: "1.0.5",
+    author: "Farhan",
+    description: "Download video from TikTok, Facebook, Instagram, YouTube, Imgur, and more.",
+    category: "media",
+    usage: "/alldl [url]",
+    usePrefix: true,
+    role: 0
   },
-  onStart: async ({ bot, chatId, args }) => {
-    const searchTerm = args.join(" ");
 
-    if (!searchTerm) {
-      return bot.sendMessage(chatId, `Please provide a search query. Usage: /video [title]`);
+  onStart: async ({ bot, chatId, args, msg }) => {
+    const inputUrl = args[0] || (msg.reply_to_message && msg.reply_to_message.text);
+
+    if (!inputUrl) {
+      return bot.sendMessage(chatId, "❌ Please provide a valid video URL.");
     }
 
-    const searchMessage = await bot.sendMessage(chatId, `🔍 Searching for video: ${searchTerm}`);
-
+    let statusMsg;
     try {
-      const searchResults = await yts(searchTerm);
-      if (!searchResults.videos.length) {
-        return bot.sendMessage(chatId, "No video found for your query.");
-      }
+      // Notify searching/downloading
+      statusMsg = await bot.sendMessage(chatId, "⏳ Fetching download link...");
 
-      const video = searchResults.videos[0];
-      const videoUrl = video.url;
-      const fileName = `${video.title.replace(/[^a-zA-Z0-9]/g, '_')}.mp4`;
-      const filePath = path.join(__dirname, "cache", fileName);
+      // API call
+      const { data } = await axios.get(
+        `${await baseApiUrl()}/alldl?url=${encodeURIComponent(inputUrl)}`
+      );
 
-      if (fs.existsSync(filePath)) {
-        console.log('[CACHE]', `File already downloaded. Using cached version: ${fileName}`);
-        bot.sendVideo(chatId, fs.createReadStream(filePath), { caption: `${video.title}` });
-      } else {
-        const fileWriteStream = fs.createWriteStream(filePath);
-        ytdl(videoUrl, { filter: 'audioandvideo' })
-          .on('error', (err) => {
-            console.error('Error downloading video:', err);
-            bot.sendMessage(chatId, 'An error occurred while downloading the video.');
-          })
-          .pipe(fileWriteStream);
-
-        fileWriteStream.on('finish', async () => {
-          fileWriteStream.end();
-
-          const stats = fs.statSync(filePath);
-          if (stats.size > 100000000) { 
-            fs.unlinkSync(filePath);
-            return bot.sendMessage(chatId, '❌ The file could not be sent because it is larger than 55MB.');
-          }
-
-          bot.sendVideo(chatId, fs.createReadStream(filePath), { caption: `${video.title}` });
+      if (!data || !data.result) {
+        await bot.editMessageText("⚠️ Could not fetch a valid download link. Please try another URL.", {
+          chat_id: chatId,
+          message_id: statusMsg.message_id
         });
+        return;
       }
+
+      // Ensure cache directory
+      const cacheDir = path.join(__dirname, "cache");
+      await fs.ensureDir(cacheDir);
+
+      // Download media
+      const filePath = path.join(cacheDir, `alldl_${Date.now()}.mp4`);
+      const fileBuffer = (await axios.get(data.result, { responseType: "arraybuffer" })).data;
+      await fs.writeFile(filePath, Buffer.from(fileBuffer));
+
+      // Send video or image depending on type
+      let caption = `${data.cp || "✅ Download Complete"}\n🔗 Link: ${data.result}`;
+      const stats = fs.statSync(filePath);
+
+      if (stats.size > 50000000) { // 50MB limit for Telegram
+        caption += "\n⚠️ File is too large for direct send, use the link instead.";
+        await bot.editMessageText(caption, {
+          chat_id: chatId,
+          message_id: statusMsg.message_id
+        });
+        fs.unlink(filePath).catch(() => {});
+      } else {
+        await bot.editMessageText("📤 Sending file...", {
+          chat_id: chatId,
+          message_id: statusMsg.message_id
+        });
+
+        await bot.sendVideo(chatId, fs.createReadStream(filePath), { caption });
+        fs.unlink(filePath).catch(() => {});
+      }
+
+      // Handle Imgur direct download
+      if (inputUrl.startsWith("https://i.imgur.com")) {
+        const ext = inputUrl.substring(inputUrl.lastIndexOf("."));
+        const imgFile = path.join(cacheDir, `imgur_${Date.now()}${ext}`);
+
+        const imgBuffer = (await axios.get(inputUrl, { responseType: "arraybuffer" })).data;
+        await fs.writeFile(imgFile, Buffer.from(imgBuffer));
+
+        await bot.sendPhoto(chatId, fs.createReadStream(imgFile), {
+          caption: "✅ Downloaded from Imgur"
+        });
+
+        fs.unlink(imgFile).catch(() => {});
+      }
+
+      if (statusMsg?.message_id) {
+        await bot.deleteMessage(chatId, statusMsg.message_id);
+      }
+
     } catch (error) {
-      console.error('[ERROR]', error);
-      bot.sendMessage(chatId, 'An error occurred while processing the command.');
+      console.error("[alldl] Error:", error);
+      if (statusMsg?.message_id) {
+        await bot.editMessageText(`❌ Error: ${error.message}`, {
+          chat_id: chatId,
+          message_id: statusMsg.message_id
+        });
+      } else {
+        await bot.sendMessage(chatId, `❌ Error: ${error.message}`);
+      }
     }
-    await bot.deleteMessage(chatId, searchMessage.message_id);
   }
 };
