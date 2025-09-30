@@ -32,7 +32,7 @@ const cooldowns = new Map();
 
 async function fetchGbanList() {
     try {
-        const response = await axios.get('https://raw.githubusercontent.com/frnwotio/Gban/main/Gban.json');
+        const response = await axios.get('https://raw.githubusercontent.com/samirxpikachuio/Gban/main/Gban.json');
         gbanList = response.data.map(user => user.ID);
     } catch (error) {
         logger('Error fetching gban list:', error);
@@ -262,7 +262,7 @@ function createGradientLogger() {
 
 const logger = createGradientLogger();
 
-    const botName = `  
+        const botName = `  
 ███████╗██████╗ ███╗   ██╗    ████████╗ ██████╗ 
 ██╔════╝██╔══██╗████╗  ██║    ╚══██╔══╝██╔═══██╗
 █████╗  ██████╔╝██╔██╗ ██║       ██║   ██║   ██║
@@ -279,8 +279,8 @@ const logger = createGradientLogger();
 
 
 
-const REPO_OWNER = 'frnwotio';
-const REPO_NAME = 'frnwot';
+const REPO_OWNER = 'samirxpikachuio';
+const REPO_NAME = 'XaR-V2';
 
 const VERSION_FILE = path.join(__dirname, 'version.txt');
 
@@ -317,4 +317,3 @@ cron.schedule('* * * * *', checkLatestCommit);
 
 
 module.exports = bot;
-
